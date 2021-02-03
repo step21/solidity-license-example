@@ -1,3 +1,11 @@
+.idea/
+*.pyc
+__pycache__
+.history
+.hypothesis/
+client/src/artifacts
+reports/
+
 # Logs
 logs
 *.log
