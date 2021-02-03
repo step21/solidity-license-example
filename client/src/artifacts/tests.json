@@ -1,0 +1,23 @@
+{
+  "contracts": {
+    "LicenseContract": "5fd5168b7ca9cfd26fa3fb6e4c9cf1f4ae1939be",
+    "console": "1ce946f6a4eaa185320328620ccf999b9e86db7c"
+  },
+  "tests": {
+    "tests/test_solidity_storage.py": {
+      "coverage": false,
+      "isolated": [],
+      "results": "EE",
+      "sha1": "23b58d09bc1cf9ea18cf522e4162683db1b68bde",
+      "txhash": []
+    },
+    "tests/test_vyper_storage.py": {
+      "coverage": false,
+      "isolated": [],
+      "results": "EE",
+      "sha1": "fe474e67ce02d826cd38cc3d89299f5a35fed3eb",
+      "txhash": []
+    }
+  },
+  "tx": {}
+}
