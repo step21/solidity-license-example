@@ -24,6 +24,7 @@ event Status(LicenseContract.License);
 
 mapping(uint256 => address) public licensor;
 mapping(uint256 => address) public licensee;
+//@TODO set arbiter in newLicense or later
 mapping(uint256 => address) public arbiter;
 mapping(uint256 => License) public licenses;
 
@@ -53,17 +54,18 @@ modifier onlyBy(address _account)
 /// @param _license pass a license struct
 /// @return _licenseID of the created license.
 //@TODO change all to uint probbaly
-function newLicense(License memory _license) public onlyOwner returns (uint _licenseID) {
+function newLicense(License memory _license, address _licensee) public onlyOwner returns (uint _licenseID) {
     // uint256 _licenseTerm, uint8 _licenseFee, uint8 _breachFee, bool _isCommissioned, bool _publicationIsApproved, bool _requiresComments, uint _timeToRemove, bool _triggeredTimeToRemove, bool _licenseBreached, bool _breachFeePaid, uint _startdate, uint _enddate
   // add some checks etc....
-  payable(licensee[_licenseID]).transfer(_license.licenseFee);
-  {
+  // this did not make logical sense as licensee was not set ...
+  //payable(licensee[_licenseID]).transfer(_license.licenseFee);
+    
         licensor[_licenseID] = owner();
-        }
-        //licensee[_licenseID] = _license.licensee;
-        {
+        
+        licensee[_licenseID] = _licensee;
+        
         licenses[_licenseID] = _license;
-        }
+        
         //_isCommissioned, _publicationIsApproved, _requiresComments, _timeToRemove, _triggeredTimeToRemove, _licenseBreached, _breachFeePaid, _startdate, _enddate);
         // sublicensees = _sublicensees;
         return _licenseID; }
