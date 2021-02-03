@@ -7,6 +7,7 @@ import {getEthereum} from "./getEthereum"
 import {
   BaseStyles,
   Heading,
+  Flex,
   Box,
   Form,
   Input,
@@ -15,7 +16,8 @@ import {
   Button,
   Text,
   Checkbox,
-  Radio
+  Radio,
+  Card
 } from "rimble-ui";
 import {ThemeProvider} from 'styled-components'
 
