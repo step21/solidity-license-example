@@ -9,5 +9,12 @@ networks:
     cmd_settings:
       mnemonic: hill law jazz limb penalty escape public dish stand bracket blue jar
 
+compiler:
+  solc:
+    version: 0.8.0
+
+console:
+  show_colors: true
+
 # enable output of development artifacts to load with react
 dev_deployment_artifacts: true
