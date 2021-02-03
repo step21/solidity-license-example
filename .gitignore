@@ -1,6 +1,7 @@
 .idea/
 *.pyc
 __pycache__
+tests/__pycache__
 .history
 .hypothesis/
 client/src/artifacts
