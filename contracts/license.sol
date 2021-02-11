@@ -19,6 +19,7 @@ contract LicenseContract is Ownable {
 
 // Events
 event LicenseStatus(LicenseContract.License);
+event LicenseID(uint licenseID);
 event LicenseContractStatus(LicenseContract);
 event LicenseFeeStatus(uint256 amount);
 event BreachFeeStatus(breachFee bfs);
@@ -46,7 +47,7 @@ struct breachFee {
 // the permissions are always false.
 
 struct License {
-    uint256 licenseID; 
+    //uint256 licenseID; 
     bytes32 workHash; // this might actually not be necessary and could be covered by licenseID but out of scope how this would work it trying to enforce client-side
     uint8 licenseFee;
     uint8 breachFee;
@@ -72,7 +73,7 @@ modifier onlyBy(address _account)
 /// @param _license passes a license struct.
 /// @return _licenseID of the created license.
 function newLicense(License memory _license) public onlyOwner returns (uint _licenseID) {
-    require(_license.licenseID != 0, "License ID has to be provided and cannot be 0"); // require license id, license fee, breach fee, startdate and enddate
+    //require(_license.licenseID != 0, "License ID has to be provided and cannot be 0"); // require license id, license fee, breach fee, startdate and enddate
     require(_license.licenseFee != 0, "License Fee has to be provided and cannot be 0.");
     require(_license.breachFee != 0, "Breach Fee has to be provided and cannot be 0.");
     uint startyear; uint startmonth; uint startday;
@@ -88,11 +89,15 @@ function newLicense(License memory _license) public onlyOwner returns (uint _lic
     require(_license.publicationIsApproved == false);
     require(_license.unauthorizedPublication == false);
     require(_license.licenseBreached == false);
+    require(_license.timeToRemove > 0, "Time for removal of unauthorized publication has to be greater than 0.");
+    LicenseContract.numLicenses++; // starts at 1
     _licenseID = LicenseContract.numLicenses;
-    LicenseContract.numLicenses++; // check if incrementation works
+     // check if incrementation works
     licensor[_licenseID] = owner();
     licenses[_licenseID] = _license;
-    emit LicenseStatus(_license); }
+    emit LicenseID(_licenseID);
+    emit LicenseStatus(_license);
+    }
 
 /// @notice 'Sign' the license by assigning a licensee and paying license and breachFee.
 /// @dev The successful signing and payment of the fees concludes a valid license.
@@ -100,6 +105,7 @@ function newLicense(License memory _license) public onlyOwner returns (uint _lic
 function signLicense(uint _licenseID, address _licensee) public payable onlyBy(msg.sender) {
     require(arbiter[_licenseID] != address(0x0), "No arbiter specified");
     licensee[_licenseID] = _licensee;
+    //payable(this.address).send(licenses[_licenseID].licenseFee);
     (bool success, ) = address(this).call{value: licenses[_licenseID].licenseFee}("");
     require(success, "Transfer of license fee failed.");
     pendingLicenseFeeWithdrawals[licensor[_licenseID]] += licenses[_licenseID].licenseFee;
@@ -114,7 +120,7 @@ function signLicense(uint _licenseID, address _licensee) public payable onlyBy(m
 /// @notice Allow withdrawal of license fee.
 /// @dev The licensor can withdraw pending license fee(s).
 /// @param _licenseID of the relevant license
-function withdrawLicenseFee(uint _licenseID) public onlyBy(licensor[_licenseID]) { // licenseID only used for modifier so maybe could be replaced with msg.sender
+function withdrawLicenseFee(uint _licenseID) public onlyBy(licensor[_licenseID]) returns (bool success) { // licenseID only used for modifier so maybe could be replaced with msg.sender
         uint amount = pendingLicenseFeeWithdrawals[msg.sender];
         // Remember to zero the pending refund before
         // sending to prevent re-entrancy attacks
@@ -127,8 +133,7 @@ function withdrawLicenseFee(uint _licenseID) public onlyBy(licensor[_licenseID])
 /// @notice This function sets the arbiter
 /// @dev Should be set before signing the license.
 /// @param _licenseID of the license to be modified and address of the arbiter to be added
-function setArbiter(uint _licenseID, address _arbiter) public onlyBy(licensor[_licenseID]) {
-    
+function setArbiter(uint _licenseID, address _arbiter) public onlyBy(licensor[_licenseID]) { // onlyOwner
     require(arbiter[_licenseID] == address(0x0), 'Arbiter already set.');
     arbiter[_licenseID] = _arbiter;
     emit LicenseContractStatus(this);
@@ -162,6 +167,7 @@ function commissionComments(uint _licenseID) public onlyBy(licensor[_licenseID])
 /// @dev At present, this is only allowed to be called by the licensor.
 /// @param _licenseID of the license to be modified
 function grantApproval(uint _licenseID) public onlyBy(licensor[_licenseID]) {
+    require(licensee[_licenseID] != address(0x0), 'Does not make sense to grant approval before a signed license.');
     require(block.timestamp > licenses[_licenseID].startdate && block.timestamp < licenses[_licenseID].enddate, "Outside of licensing period.");
     require(licenses[_licenseID].publicationIsApproved == false, "Publication was already approved");
     require(licenses[_licenseID].unauthorizedPublication == false, "Unauthorized publication, no ex-post approval allowed.");
@@ -203,10 +209,9 @@ function declareRemoved(uint _licenseID) public onlyBy(arbiter[_licenseID]) {
 /// @param _licenseID of the license to be modified
 function declareBreach(uint _licenseID) public onlyBy(arbiter[_licenseID]) returns (bool success) {
     require(licensee[_licenseID] != address(0x0), 'Does not make sense to declare a breach on an unsigned license.');
-    // check license period
     //require(licenses[_licenseID].unauthorizedPublication); // mmmh this would mean only possibility for breach is unauthorized publication
     require(block.timestamp > licenses[_licenseID].startdate && block.timestamp < licenses[_licenseID].enddate, "Outside of licensing period."); // check for the license period
-    require(licenses[_licenseID].timeOfNotification + licenses[_licenseID].timeToRemove >= block.timestamp, "The removal period has not yet lapsed.");
+    require(licenses[_licenseID].timeOfNotification + licenses[_licenseID].timeToRemove <= block.timestamp, "The removal period has not yet lapsed.");
     licenses[_licenseID].licenseBreached = true;
     breachFeeStorage[licensor[_licenseID]].cleared = true;
     sublicensees[_licenseID] = [address(0x0)];
@@ -224,23 +229,23 @@ function withdrawBreachFee(uint _licenseID) public onlyBy(licensor[_licenseID]) 
         // Remember to zero the pending refund before
         // sending to prevent re-entrancy attacks
         breachFeeStorage[msg.sender].amount = 0;
-        (bool success, ) = address(this).call{value: amount}(""); 
+        (bool success, ) = licensor[_licenseID].call{value: amount}(""); 
         require(success, "Transfer of breach fee failed.");
     }
 
 /// @notice This allows to 'withdraw' (return) the breach fee if the license was concluded properly.
 /// @dev 
 /// @param _licenseID of the license that ended
-function returnBreachFee(uint _licenseID) public onlyBy(licensor[_licenseID])  {
+function returnBreachFee(uint _licenseID) public onlyBy(licensee[_licenseID])  {
         require(licensee[_licenseID] != address(0x0), "There is no signed license.");
         require(block.timestamp > licenses[_licenseID].enddate, "The license is still active, the breach fee cannot be returned yet.");
         require(licenses[_licenseID].licenseBreached == false, "License is marked as breached.");
         require(breachFeeStorage[msg.sender].cleared == false, "There was a breach, cannot be withdrawn.");
-        uint amount = breachFeeStorage[msg.sender].amount;
+        uint amount = breachFeeStorage[licensor[_licenseID]].amount; 
         // Remember to zero the pending refund before
         // sending to prevent re-entrancy attacks
-        breachFeeStorage[msg.sender].amount = 0;
-        (bool success, ) = address(this).call{value: amount}("");
+        breachFeeStorage[licensor[_licenseID]].amount = 0;
+        (bool success, ) = licensee[_licenseID].call{value: amount}("");
         require(success, "Transfer of breach fee failed.");
     }
 
@@ -248,13 +253,13 @@ function returnBreachFee(uint _licenseID) public onlyBy(licensor[_licenseID])  {
 /// @dev Here  as this is just a passive function and to try another pattern, if/else etc are used instad of require/assert
 /// @param _licenseID of the license to be modified
 function licenseActivationStatus(uint _licenseID) public returns (bool status) {
-        if (licensor[_licenseID] == address(0x0) || licenses[_licenseID].licenseID != 0 ) {
+        if (licensor[_licenseID] == address(0x0) ) { // || licenses[_licenseID].licenseID != 0
                status = false;
         } else if (licensee[_licenseID] == address(0x0)) {
             status == false;
         } else if (licenses[_licenseID].licenseBreached == true || block.timestamp > licenses[_licenseID].enddate || block.timestamp < licenses[_licenseID].startdate ) {
             status = false;
-        } else if (block.timestamp > (licenses[_licenseID].timeOfNotification + licenses[_licenseID].timeToRemove) ) {
+        } else if (licenses[_licenseID].timeOfNotification != 0 && block.timestamp > (licenses[_licenseID].timeOfNotification + licenses[_licenseID].timeToRemove) ) {
             declareBreach(_licenseID);
         } else {
             status = true;
@@ -262,5 +267,13 @@ function licenseActivationStatus(uint _licenseID) public returns (bool status) {
         emit LicenseStatus(licenses[_licenseID]);
         return status;
     }
+
+    // for receiving
+    event Received(address, uint);
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
 }
+
+// Note: could also use state machine / at stage model
     
