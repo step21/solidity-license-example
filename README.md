@@ -1,6 +1,6 @@
 # leet-licens0r (based on [brownie](https://github.com ) [react mix]() and [rimble ui](https://rimble.consensys.design))
 
-This mix comes with everything you need to start using [React](https://reactjs.org/) with a Brownie project.
+[![MythXBadge](https://badgen.net/https/api.mythx.io/v1/projects/677fffdf-7f1a-41e3-8e78-0657f6ec3612/badge/data?cache=300&icon=https://raw.githubusercontent.com/ConsenSys/mythx-github-badge/main/logo_white.svg)](https://docs.mythx.io/dashboard/github-badges)
 
 ## Installation
 
