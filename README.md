@@ -1,11 +1,11 @@
-# Solidity License Example (based on [brownie](https://github.com ) [react mix]() and [rimble ui](https://rimble.consensys.design))
+# Solidity License Example
 
 [![MythXBadge](https://badgen.net/https/api.mythx.io/v1/projects/677fffdf-7f1a-41e3-8e78-0657f6ec3612/badge/data?cache=300&icon=https://raw.githubusercontent.com/ConsenSys/mythx-github-badge/main/logo_white.svg)](https://docs.mythx.io/dashboard/github-badges) | ![Main Workflow](https://github.com/step21/leet-licens0r/workflows/main%20workflow/badge.svg)
 
 This repository contains a license example to complement my thesis work on comparing formalisms for representation of computable contracts. It uses the brownie framework for tests and can be easily extended with a user interface, however this is only partially present due to time constraints.
 Please note, this is not meant to be used or deployed anywhere, as for example it purposefully does not use any ERC-721 or similar standards that would make it compatible with other blockchain systems, but instead I aimed for similarity to example contract text and the other examples.
 
-## Installation
+## Installation  (based on brownie [react mix]() and [rimble ui](https://rimble.consensys.design))
 
 1. [Install Brownie](https://eth-brownie.readthedocs.io/en/stable/install.html), if you haven't already. You must be using version `1.9.0` or newer.
 
